@@ -1,0 +1,29 @@
+{
+  "apps": [
+    {
+      "name": "simple_server",
+      "script": "app.js",
+      "env": {
+        "COMMON_VARIABLE": "true"
+      },
+      "env_production": {
+        "NODE_ENV": "production"
+      }
+    }
+  ],
+  "deploy": {
+    "production": {
+      "user": "deploy",
+      "host": ["68.183.180.251"],
+      "port": "22",
+      "ref": "origin/master",
+      "repo": "git@github.com:UICJohn/simple_server.git",
+      "path": "/home/deploy/",
+      "ssh_options": "StrictHostKeyChecking=no",
+      "post-deploy": "npm install && pm2 startOrRestart deploy.json --env production",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
