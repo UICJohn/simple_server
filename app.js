@@ -22,7 +22,7 @@ app.get('/object/:key', async (req, res) => {
   }
 
   const result = await model.query(req.params.key, time)
-
+  console.log(result)
   if (result){
     res.send(JSON.stringify({value: result.value}))
   } else {
@@ -33,10 +33,10 @@ app.get('/object/:key', async (req, res) => {
 app.post('/object', async (req, res) => {
   const key = Object.keys(req.body)[0]
 
-  const result = await model.insertOne(key, req.body[key]);
+  const result = await model.insertOrUpdate(key, req.body[key]);
 
   if (result){
-    res.send(JSON.stringify({value: result.ops[0].value}))
+    res.send(JSON.stringify(result))
   } else {
     res.send(JSON.stringify({}))
   }
