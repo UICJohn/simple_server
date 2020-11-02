@@ -1,50 +1,58 @@
-const express = require('express')
-const app = express()
-const port = 3000
-const { Database } = require('./db')
-const model = require('./model')
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 
-var bodyParser = require('body-parser')
+const bodyparser = require("body-parser");
+const mongoose   = require("mongoose");
+const indexRouter = require("./routes/index")
+const objectRouter = require("./routes/object")
 
-app.use(bodyParser.urlencoded({ extended: false }))
+require('dotenv').config();
 
-app.use(bodyParser.json())
 
-app.get('/object/:key', async (req, res) => {
-  let time = req.query.timestamp;
+if(process.env.NODE_ENV === 'test'){
+  mongoose.connect(process.env.DATABASE_URI_TEST, {useNewUrlParser: true, useUnifiedTopology: true});
+} else {
+  mongoose.connect(process.env.DATABASE_URI, {useNewUrlParser: true, useUnifiedTopology: true});
+}
 
-  if(time) {
-    if (time.length === 10) {
-      time = new Date(parseFloat(req.query.timestamp + '000'))
-    } else {
-      time = new Date(parseFloat(req.query.timestamp))
-    }
-  }
+var app = express();
 
-  const result = await model.query(req.params.key, time)
-  console.log(result)
-  if (result){
-    res.send(JSON.stringify({value: result.value}))
-  } else {
-    res.send(JSON.stringify({}))
-  }
-})
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
 
-app.post('/object', async (req, res) => {
-  const key = Object.keys(req.body)[0]
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded( {extended: true} ));
+app.use(logger('dev'));
 
-  const result = await model.insertOrUpdate(key, req.body[key]);
 
-  if (result){
-    res.send(JSON.stringify(result))
-  } else {
-    res.send(JSON.stringify({}))
-  }
-})
 
-Database.connect()
+app.use('/', indexRouter)
+app.use('/object', objectRouter);
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-})
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(404));
+});
 
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  console.log(err)
+
+  // render the error page
+  res.status(err.status || 500);
+  res.json({error: 'error'});
+});
+
+module.exports = app;
