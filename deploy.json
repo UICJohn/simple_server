@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "simple_server",
-      "script": "bin/www",
+      "script": "./bin/www",
       "env": {
         "COMMON_VARIABLE": "true"
       },
